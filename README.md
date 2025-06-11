@@ -21,6 +21,7 @@ This project demonstrates an end-to-end **data pipeline** on **Google Cloud Plat
 ## 🔄 Pipeline Steps
 
 ### 🟤 Step 1: Raw Data Ingestion (Bronze Layer)
+- 📆 Used Cloud Scheduler to copy files from backend bucket to raw bucket on a schedule.
 
 - ✅ Copied 5 CSV files using `gsutil` from backend bucket to raw bucket.
 
@@ -68,11 +69,11 @@ bash create_customer_balance_table.sh
 
 * 🔁 Upserted daily updates using:
 
-```bash
+ 
 bash daily_customer_balance_upsert.sh
 ```
 
----
+--- Used Cloud Composer (Airflow) to orchestrate the full pipeline
 
 ## 🧑‍💻 My Role: Data Cleaning & Transformation Lead
 
@@ -145,5 +146,10 @@ All project execution screenshots are stored in:
 * 🧪 Staging Table: `refined_gold_customer_balance_temp`
 
 ```
+## Note
+☁️ Cloud Scheduler is used to automatically copy files from the backend bucket to the raw/bronze bucket on a daily or scheduled basis.
+
+🔁 The entire data pipeline is orchestrated using Airflow Composer, enabling seamless end-to-end automation of all steps from ingestion to BigQuery upsert.
+
 
  
