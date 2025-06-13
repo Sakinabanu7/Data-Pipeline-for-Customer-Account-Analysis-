@@ -147,9 +147,42 @@ All project execution screenshots are stored in:
 
 ```
 ## Note
-☁️ Cloud Scheduler is used to automatically copy files from the backend bucket to the raw/bronze bucket on a daily or scheduled basis.
+ We used Cloud Scheduler as the core orchestrator to trigger each stage of the pipeline at specific times. This created a reliable, hands-free data flow that refreshes the system daily without any manual steps. The pipeline follows the bronze–silver–gold architecture, which is widely used in real-world data engineering projects.
 
-🔁 The entire data pipeline is orchestrated using Airflow Composer, enabling seamless end-to-end automation of all steps from ingestion to BigQuery upsert.
+Step 1: Ingestion to Raw (Bronze Layer)
+The first Cloud Scheduler job runs at 7:00 AM and triggers a Cloud Function that copies a .csv file from a backend GCS bucket to our raw/bronze bucket. This step ensures that the raw data is securely stored and available for processing.
+
+We use Python code inside the Cloud Function to call GCP’s Storage API.
+
+This function acts as a gatekeeper for our data pipeline, verifying that the correct file is copied before the transformation begins.
+
+Running this as a scheduled job helps us build a repeatable, time-driven ingestion mechanism.
+
+Step 2: Transformation to Curated (Silver Layer)
+At 7:05 AM, a second Cloud Scheduler job submits a Dataproc PySpark job. The PySpark script reads the raw .csv file from the bronze layer, performs data cleaning and validation, and then writes the cleaned data as Parquet files into the curated (silver) bucket.
+
+This transformation step includes:
+
+Removing null values
+
+Renaming and standardizing column names
+
+Converting formats (e.g., dates or numbers)
+
+Ensuring schema consistency
+
+This stage is essential because only clean and validated data should move to the analytics layer. By scheduling it after the ingestion job, we make sure we’re always processing fresh and updated data.
+
+Step 3: Load to BigQuery (Gold Layer)
+At 7:15 AM, a third Cloud Scheduler job triggers another Cloud Function that loads the curated Parquet files into a BigQuery table. This is the final stage of the pipeline—also called the gold layer—which makes the data ready for analytics, reporting, or dashboarding.
+
+The load is done using the BigQuery Python client and load_table_from_uri().
+
+This step either appends or replaces data in the BigQuery table, depending on the requirement.
+
+Once this job completes, decision-makers and analysts have access to up-to-date, clean, and trusted data.
+
+The entire data pipeline is orchestrated using Airflow Composer, enabling seamless end-to-end automation of all steps from ingestion to BigQuery upsert.
 
 
  
